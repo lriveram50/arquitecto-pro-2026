@@ -45,16 +45,16 @@
         const { useState, useEffect } = React;
 
         // ==========================================
-        // CONFIGURACIÓN: PEGA TU URL AQUÍ
+        // CONFIGURACIÓN: PEGA TU URL DE APPS SCRIPT AQUÍ
         // ==========================================
-        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwTUzeq0E3ld5haKRwmLEHAWzJXCytCA-OPFkp7O2IWIvxbfYxjNUpDH_dUImqZKiH4NQ/exec"; 
+        const APPS_SCRIPT_URL = "PON_AQUI_TU_URL"; 
 
         const App = () => {
             const [activeTab, setActiveTab] = useState('doc01');
             const [isSaving, setIsSaving] = useState(false);
             const [lastSaved, setLastSaved] = useState(null);
 
-            // --- ESTADO MAESTRO DE DATOS ---
+            // --- ESTADO MAESTRO DE DATOS (EL CEREBRO) ---
             const [store, setStore] = useState({
                 global: { institucion: "I.E. NUESTRA SEÑORA DE LA PAZ", docente: "PROF. MARCO ANTONIO", grado: "3ero", seccion: "A", area: "COMUNICACIÓN", nivel: "SECUNDARIA", anio: "2026", fecha: "MARZO 2026" },
                 matriz: [{ id: Date.now(), estandar: "", comp: "", cap: "", dcn: "", prec: "", crit: "" }],
@@ -65,13 +65,13 @@
                     propositos: [{ id: 1, compCap: "", dcn: "", uni: "", inst: "", time: Array(9).fill("") }],
                     recursos: { mat: "", rec: "", bibD: "", bibE: "" }
                 },
-                unidad: { n: "1", titulo: "", situacion: "", propositos: [], sesiones: [] },
+                unidad: { n: "1", titulo: "", fecha: "", situacion: "", enfoques: [], propositos: [], sesiones: [], rec: "", mat: "" },
                 proyecto: { n: "1", nombre: "", situacion: { ubi: "", prob: "", des: "" }, producto: "" }
             });
 
             // Función para Guardar
             const handleSave = async (target, dataToSave) => {
-                if (APPS_SCRIPT_URL === "PON_AQUI_TU_URL") return alert("Por favor configura la URL de Apps Script.");
+                if (APPS_SCRIPT_URL === "https://script.google.com/macros/s/AKfycbwTUzeq0E3ld5haKRwmLEHAWzJXCytCA-OPFkp7O2IWIvxbfYxjNUpDH_dUImqZKiH4NQ/exec") return alert("Por favor configura la URL de Apps Script.");
                 setIsSaving(true);
                 try {
                     await fetch(APPS_SCRIPT_URL, {
@@ -96,8 +96,9 @@
                 });
             };
 
-            // --- VISTAS DE DOCUMENTOS ---
-
+            // ==========================================
+            // BLOQUE 01: VISTA MATRIZ (DOC 01)
+            // ==========================================
             const Doc01 = () => (
                 <div className="paper-sheet font-serif-doc text-[10pt]">
                     <div className="text-center mb-8"><h1 className="font-bold text-lg uppercase underline">MATRIZ DE ESTÁNDARES Y DESEMPEÑOS PRECISADOS - 2026</h1></div>
@@ -125,14 +126,16 @@
                             ))}
                         </tbody>
                     </table>
-                    <button onClick={() => addRow('matriz', {estandar:"", comp:"", cap:"", dcn:"", prec:"", crit:""})} className="mt-4 no-print text-blue-600 font-bold text-xs flex items-center gap-1"><Plus size={14}/> Añadir Fila a Matriz</button>
+                    <button onClick={() => addRow('matriz', {estandar:"", comp:"", cap:"", dcn:"", prec:"", crit:""})} className="mt-4 no-print text-blue-600 font-bold text-xs flex items-center gap-1"><span className="text-lg">+</span> Añadir Fila a Matriz</button>
                 </div>
             );
 
+            // ==========================================
+            // BLOQUE 02: VISTA ANUAL (DOC 02)
+            // ==========================================
             const Doc02 = () => (
                 <div className="paper-sheet font-serif-doc text-[10pt]">
                     <div className="text-center mb-10"><h1 className="font-bold text-xl uppercase underline">PLANIFICACIÓN ANUAL - 2026</h1></div>
-                    
                     <section className="mb-6 uppercase font-bold text-[9.5pt]">
                         <h2 className="mb-2">I. DATOS INFORMATIVOS:</h2>
                         <div className="grid grid-cols-2 gap-y-1">
@@ -143,9 +146,7 @@
                             <p>FECHA: <span className="font-normal border-b border-black inline-block min-w-[100px]">{store.global.fecha}</span></p>
                         </div>
                     </section>
-
                     <section className="mb-6"><h2 className="font-bold uppercase">II. FUNDAMENTACIÓN</h2><textarea rows="5" className="border border-black p-2 mt-1" placeholder="Escribir fundamento anual..." /></section>
-
                     <section className="mb-6">
                         <h2 className="font-bold uppercase">III. ENFOQUES TRANSVERSALES</h2>
                         <table className="text-[9pt] mt-1 text-center">
@@ -155,31 +156,9 @@
                             <tbody>
                                 {store.anual.enfoques.map(enf => (
                                     <tr key={enf.id}>
-                                        <td className="p-1"><input className="font-bold" value={enf.nom} /></td>
-                                        <td className="p-1"><input /></td>
-                                        <td className="p-1"><textarea rows="2" /></td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                        <button onClick={() => addRow('anual.enfoques', {nom:"", val:"", act:""})} className="mt-1 no-print text-[8pt] text-blue-600 font-bold">+ Añadir Enfoque</button>
-                    </section>
-
-                    <section className="mb-6">
-                        <h2 className="font-bold uppercase">IV. CALENDARIZACIÓN</h2>
-                        <table className="text-[8.5pt] text-center mt-1">
-                            <thead className="bg-gray-100 font-bold">
-                                <tr><td rowSpan="2">TRIMESTRES</td><td colSpan="2">TEMPORALIZACIÓN</td><td rowSpan="2">N° SEM</td><td rowSpan="2">N° HORAS</td></tr>
-                                <tr><td>UNIDAD</td><td>NOMBRE DE LA UNIDAD</td></tr>
-                            </thead>
-                            <tbody>
-                                {store.anual.calendarizacion.map(u => (
-                                    <tr key={u.id}>
-                                        <td className="font-bold">{u.trim}</td>
-                                        <td>{u.u}</td>
-                                        <td className="text-left"><input /></td>
-                                        <td><input className="text-center"/></td>
-                                        <td><input className="text-center"/></td>
+                                        <td className="border border-black p-1"><input className="font-bold text-center" value={enf.nom} /></td>
+                                        <td className="border border-black p-1"><input className="text-center" /></td>
+                                        <td className="border border-black p-1"><textarea rows="2" /></td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -188,76 +167,135 @@
                 </div>
             );
 
+            // ==========================================
+            // BLOQUE 03: VISTA UNIDAD (DOC 03)
+            // ==========================================
+            const Doc03 = () => (
+                <div className="paper-sheet font-serif-doc text-[10pt]">
+                    <div className="text-center mb-6">
+                        <h1 className="font-bold text-lg uppercase">UNIDAD N°: {store.unidad.n}</h1>
+                        <p className="font-bold">TÍTULO DE LA UNIDAD: <input className="border-b border-black w-2/3 text-center" placeholder="..."/></p>
+                    </div>
+                    <section className="mb-6 uppercase font-bold text-[9.5pt]">
+                        <h2 className="mb-2">I. DATOS INFORMATIVOS:</h2>
+                        <div className="grid grid-cols-2 gap-y-1">
+                            <p>ÁREA: {store.global.area}</p>
+                            <p>NIVEL: {store.global.nivel}</p>
+                            <p>GRADO: {store.global.grado}</p>
+                            <p>DOCENTE: {store.global.docente}</p>
+                        </div>
+                    </section>
+                    <section className="mb-6">
+                        <h2 className="font-bold uppercase">II. SITUACIÓN SIGNIFICATIVA:</h2>
+                        <textarea rows="8" className="border border-black p-4 mt-1 italic text-[9.5pt]" placeholder="Redactar la situación significativa de la unidad..." />
+                    </section>
+                    <table className="text-[8pt] text-center mt-6">
+                        <thead className="bg-gray-100 font-bold uppercase">
+                            <tr><td>N° SESIÓN</td><td>NOMBRE DE LA SESIÓN</td><td>COMPETENCIA Y CAPACIDADES</td><td>DESEMPEÑO PRECISADO</td></tr>
+                        </thead>
+                        <tbody>
+                            {[1,2,3].map(n => (
+                                <tr key={n} className="h-16"><td className="border border-black">{n}</td><td className="border border-black"></td><td className="border border-black"></td><td className="border border-black"></td></tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            );
+
+            // ==========================================
+            // BLOQUE 04: VISTA SESIÓN (DOC 04)
+            // ==========================================
+            const Doc04 = () => (
+                <div className="paper-sheet font-serif-doc text-[10pt]">
+                    <div className="text-center mb-6">
+                        <h1 className="font-bold text-lg uppercase">PLANIFICACIÓN DE ACTIVIDADES SEMANALES - 2026</h1>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4 uppercase font-bold text-[9pt] mb-6">
+                        <p>ÁREA: {store.global.area}</p>
+                        <p>DOCENTE: {store.global.docente}</p>
+                        <p>GRADO: {store.global.grado}</p>
+                        <p>SESIÓN N°: <input className="border-b border-black w-12" /></p>
+                    </div>
+                    <div className="border-t border-black pt-4 space-y-2">
+                        <p className="font-bold">NOMBRE DE LA SESIÓN: <input className="border-b border-black w-2/3" /></p>
+                        <p className="font-bold">PROPÓSITO: <input className="border-b border-black w-2/3 italic" /></p>
+                    </div>
+                    <table className="mt-6 text-[8.5pt]">
+                        <thead className="bg-gray-100 font-bold text-center">
+                            <tr><td>SECUENCIA DIDÁCTICA</td><td>TIEMPO</td></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td className="p-4 border border-black min-h-[400px]">
+                                <p className="font-bold underline">INICIO:</p><br/><br/>
+                                <p className="font-bold underline">DESARROLLO:</p><br/><br/><br/>
+                                <p className="font-bold underline">CIERRE:</p>
+                            </td><td className="border border-black w-20"></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            );
+
+            // ==========================================
+            // BLOQUE 05: VISTA PROYECTO (DOC 05)
+            // ==========================================
             const Doc05 = () => (
                 <div className="paper-sheet font-serif-doc text-[10pt]">
                     <div className="mb-10 font-bold uppercase text-sm">
                         <p>PROYECTO N°: <input className="w-12 border-b border-black font-normal" /></p>
-                        <p>NOMBRE DEL PROYECTO: <input className="w-2/3 border-b border-black font-normal italic" placeholder="Título..." /></p>
+                        <p>NOMBRE DEL PROYECTO: <input className="w-2/3 border-b border-black font-normal italic" placeholder="Título del proyecto..." /></p>
                     </div>
-                    <section className="mb-6 uppercase font-bold text-[9pt]">
+                    <section className="mb-6 uppercase font-bold text-[9pt] border-l-4 border-black pl-4">
                         <h2 className="mb-3">I. DATOS INFORMATIVOS</h2>
                         <p>NIVEL: {store.global.nivel}</p>
                         <p>GRADO: {store.global.grado}</p>
-                        <p>ÁREAS: {store.global.area}</p>
                         <p>DOCENTE: {store.global.docente}</p>
                     </section>
                     <section className="mb-8">
                         <h2 className="font-bold uppercase mb-2">II. SITUACIÓN SIGNIFICATIVA:</h2>
-                        <table className="text-center font-bold text-[10.5pt] bg-slate-50">
-                            <thead><tr><th className="p-2">UBICACIÓN</th><th className="p-2">PROBLEMÁTICA</th><th className="p-2">DESAFÍO</th></tr></thead>
+                        <table className="text-center font-bold text-[10.5pt] bg-slate-50 border border-black">
+                            <thead><tr><th className="border border-black p-2">UBICACIÓN</th><th className="border border-black p-2">PROBLEMÁTICA</th><th className="border border-black p-2">DESAFÍO</th></tr></thead>
                             <tbody>
                                 <tr className="h-40">
-                                    <td><textarea className="text-center italic h-full" /></td>
-                                    <td><textarea className="text-center italic h-full" /></td>
-                                    <td><textarea className="text-center italic h-full" /></td>
+                                    <td className="border border-black"><textarea className="text-center italic" placeholder="..." /></td>
+                                    <td className="border border-black"><textarea className="text-center italic" placeholder="..." /></td>
+                                    <td className="border border-black"><textarea className="text-center italic" placeholder="..." /></td>
                                 </tr>
-                            </tbody>
-                        </table>
-                    </section>
-                    <section>
-                        <h2 className="font-bold uppercase mb-2">IV. PROPÓSITO DE APRENDIZAJE</h2>
-                        <table className="text-[8.5pt] text-center">
-                            <thead className="bg-gray-50 uppercase font-bold">
-                                <tr><td>COMPETENCIAS</td><td>CAPACIDADES</td><td>DESEMPEÑOS PRECISADOS</td><td>EVIDENCIAS</td><td>INST. EVALUACIÓN</td></tr>
-                            </thead>
-                            <tbody>
-                                <tr className="h-12"><td></td><td></td><td></td><td></td><td></td></tr>
-                                <tr className="bg-gray-200 font-bold"><td colSpan="2">PRODUCTO FINAL</td><td colSpan="3"><input className="text-center font-bold uppercase" /></td></tr>
                             </tbody>
                         </table>
                     </section>
                 </div>
             );
 
+            // --- BARRA LATERAL (CONTROL) ---
             const Sidebar = () => (
-                <aside className="w-64 bg-slate-900 text-slate-400 p-6 no-print hidden lg:flex flex-col border-r border-slate-800">
+                <aside className="w-72 bg-slate-900 text-slate-400 p-6 no-print hidden lg:flex flex-col border-r border-slate-800 shrink-0">
                     <div className="flex items-center gap-3 text-white mb-10">
-                        <div className="bg-blue-600 p-2 rounded-xl"><PenTool size={20} /></div>
+                        <div className="bg-blue-600 p-2.5 rounded-2xl shadow-xl shadow-blue-500/20"><span className="font-bold">A</span></div>
                         <span className="font-black text-xl tracking-tighter">ARQUITECTO PRO</span>
                     </div>
                     <nav className="flex-1 space-y-1">
                         {[
-                            { id: 'doc01', label: '01. Matriz', icon: Layout },
-                            { id: 'doc02', label: '02. Anual', icon: Calendar },
-                            { id: 'doc03', label: '03. Unidad', icon: ClipboardCheck },
-                            { id: 'doc04', label: '04. Sesión', icon: FileText },
-                            { id: 'doc05', label: '05. Proyecto', icon: BookOpen },
+                            { id: 'doc01', label: '01. Matriz', icon: 'M' },
+                            { id: 'doc02', label: '02. Anual', icon: 'A' },
+                            { id: 'doc03', label: '03. Unidad', icon: 'U' },
+                            { id: 'doc04', label: '04. Sesión', icon: 'S' },
+                            { id: 'doc05', label: '05. Proyecto', icon: 'P' },
                         ].map(t => (
                             <button
                                 key={t.id}
                                 onClick={() => setActiveTab(t.id)}
-                                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all ${activeTab === t.id ? 'bg-blue-600 text-white shadow-lg' : 'hover:bg-slate-800'}`}
+                                className={`w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-xs font-bold transition-all ${activeTab === t.id ? 'bg-blue-600 text-white shadow-xl' : 'hover:bg-slate-800'}`}
                             >
-                                <t.icon size={18} /> {t.label}
+                                <span className="bg-slate-800 w-6 h-6 flex items-center justify-center rounded-lg text-[10px]">{t.icon}</span>
+                                {t.label}
                             </button>
                         ))}
                     </nav>
                     <div className="pt-6 border-t border-slate-800">
                         <button 
                             onClick={() => handleSave(activeTab.toUpperCase(), {})}
-                            className="w-full bg-slate-800 text-white py-3 rounded-xl text-xs font-black flex items-center justify-center gap-2 hover:bg-black transition-all"
+                            className="w-full bg-slate-800 text-white py-4 rounded-2xl text-[10px] font-black flex items-center justify-center gap-2 hover:bg-black transition-all border border-slate-700"
                         >
-                            {isSaving ? <RefreshCw className="animate-spin" size={14}/> : <Save size={14}/>} 
                             {isSaving ? "GUARDANDO..." : "GUARDAR EN SHEETS"}
                         </button>
                     </div>
@@ -268,20 +306,19 @@
                 <div className="min-h-screen flex">
                     <Sidebar />
                     <main className="flex-1 overflow-y-auto print-area flex flex-col items-center">
-                        <header className="w-full bg-white border-b px-8 py-4 flex justify-between items-center no-print">
-                            <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">Visualización en Tiempo Real / {activeTab}</div>
+                        <header className="w-full bg-white border-b px-8 py-4 flex justify-between items-center no-print sticky top-0 z-10">
+                            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Planificación Integral / {activeTab}</div>
                             <div className="flex items-center gap-4">
-                                {lastSaved && <span className="text-[9px] font-bold text-green-600 uppercase tracking-tighter">Sincronizado: {lastSaved}</span>}
-                                <button onClick={() => window.print()} className="p-2 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-600"><Printer size={20}/></button>
+                                {lastSaved && <span className="text-[10px] font-bold text-green-600">SINCRONIZADO {lastSaved}</span>}
+                                <button onClick={() => window.print()} className="p-2 bg-slate-100 hover:bg-slate-200 rounded-lg">Imprimir</button>
                             </div>
                         </header>
                         <div className="w-full">
                             {activeTab === 'doc01' && <Doc01 />}
                             {activeTab === 'doc02' && <Doc02 />}
+                            {activeTab === 'doc03' && <Doc03 />}
+                            {activeTab === 'doc04' && <Doc04 />}
                             {activeTab === 'doc05' && <Doc05 />}
-                            {(activeTab === 'doc03' || activeTab === 'doc04') && (
-                                <div className="text-center py-40 text-slate-300 font-black uppercase text-3xl italic">Hoja Virtual en Proceso de Diseño...</div>
-                            )}
                         </div>
                     </main>
                 </div>
