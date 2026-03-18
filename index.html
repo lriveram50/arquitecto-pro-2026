@@ -4,27 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Arquitecto Pro - Sistema de Planificación</title>
-    <!-- Librerías de React y Estilos -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Babel para procesar JSX en el navegador -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <!-- Tipografía -->
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&family=Noto+Serif:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
     
     <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #e2e8f0; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f1f5f9; }
         .font-serif-doc { font-family: 'Noto Serif', serif; }
         
-        /* Estilo de Hoja A4 Virtual */
         .paper-sheet {
             width: 210mm;
             min-height: 297mm;
             padding: 1.5cm;
             margin: 2rem auto;
             background: white;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
             position: relative;
             color: black;
         }
@@ -32,20 +28,14 @@
         @media print {
             body { background: white; }
             .no-print { display: none !important; }
-            .paper-sheet { 
-                margin: 0 !important; 
-                box-shadow: none !important; 
-                width: 100% !important;
-                border: none !important;
-            }
+            .paper-sheet { margin: 0 !important; box-shadow: none !important; width: 100% !important; border: none !important; }
         }
 
-        /* Estilos de tabla estilo Word */
         table { width: 100%; border-collapse: collapse; margin-top: 5px; }
         th, td { border: 1px solid black; padding: 4px; vertical-align: top; }
         textarea { width: 100%; border: none; outline: none; resize: none; background: transparent; font-family: inherit; font-size: inherit; }
         input { border: none; outline: none; background: transparent; width: 100%; }
-        .bg-doc-header { background-color: #f1f5f9; font-weight: bold; text-align: center; text-transform: uppercase; }
+        .bg-gray-doc { background-color: #f8fafc; font-weight: bold; text-align: center; }
     </style>
 </head>
 <body>
@@ -54,177 +44,245 @@
     <script type="text/babel">
         const { useState, useEffect } = React;
 
-        // Configuración de URL - REEMPLAZAR AQUÍ
+        // ==========================================
+        // CONFIGURACIÓN: PEGA TU URL AQUÍ
+        // ==========================================
         const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwTUzeq0E3ld5haKRwmLEHAWzJXCytCA-OPFkp7O2IWIvxbfYxjNUpDH_dUImqZKiH4NQ/exec"; 
 
         const App = () => {
             const [activeTab, setActiveTab] = useState('doc01');
             const [isSaving, setIsSaving] = useState(false);
+            const [lastSaved, setLastSaved] = useState(null);
 
-            // Estado Maestro de Datos
+            // --- ESTADO MAESTRO DE DATOS ---
             const [store, setStore] = useState({
-                config: { institucion: "I.E. NUESTRA SEÑORA DE LA PAZ", docente: "PROF. MARCO ANTONIO", grado: "3ero", seccion: "A", area: "COMUNICACIÓN", nivel: "SECUNDARIA", anio: "2026" },
-                matriz: [{ id: "m1", estandar: "", comp: "", cap: "", dcn: "", prec: "", crit: "" }],
-                anual: { fundamentacion: "", enfoques: [], calendarizacion: [], recursos: { mat: "", rec: "", bibD: "", bibE: "" } },
+                global: { institucion: "I.E. NUESTRA SEÑORA DE LA PAZ", docente: "PROF. MARCO ANTONIO", grado: "3ero", seccion: "A", area: "COMUNICACIÓN", nivel: "SECUNDARIA", anio: "2026", fecha: "MARZO 2026" },
+                matriz: [{ id: Date.now(), estandar: "", comp: "", cap: "", dcn: "", prec: "", crit: "" }],
+                anual: { 
+                    fundamentacion: "", 
+                    enfoques: [{ id: 1, nom: "Enfoque de Derechos", val: "", act: "" }],
+                    calendarizacion: [{ id: 1, trim: "I TRIMESTRE", u: "1", nom: "", sem: "", hor: "" }],
+                    propositos: [{ id: 1, compCap: "", dcn: "", uni: "", inst: "", time: Array(9).fill("") }],
+                    recursos: { mat: "", rec: "", bibD: "", bibE: "" }
+                },
                 unidad: { n: "1", titulo: "", situacion: "", propositos: [], sesiones: [] },
-                proyecto: { n: "1", nombre: "", ubicacion: "", problema: "", desafio: "", producto: "" }
+                proyecto: { n: "1", nombre: "", situacion: { ubi: "", prob: "", des: "" }, producto: "" }
             });
 
-            // Función para guardar
-            const handleSave = async (target) => {
-                if (APPS_SCRIPT_URL === "PON_AQUI_TU_URL") return alert("Configura la URL de Apps Script primero");
+            // Función para Guardar
+            const handleSave = async (target, dataToSave) => {
+                if (APPS_SCRIPT_URL === "PON_AQUI_TU_URL") return alert("Por favor configura la URL de Apps Script.");
                 setIsSaving(true);
                 try {
-                    // Aquí iría la lógica fetch (se mantiene igual que la anterior)
-                    console.log("Guardando en pestaña:", target);
-                } finally {
-                    setTimeout(() => setIsSaving(false), 800);
-                }
+                    await fetch(APPS_SCRIPT_URL, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ target: target, action: 'save', data: dataToSave })
+                    });
+                    setLastSaved(new Date().toLocaleTimeString());
+                } catch (e) { console.error(e); }
+                finally { setTimeout(() => setIsSaving(false), 1000); }
             };
 
-            // --- RENDER DE DOCUMENTOS ---
+            // --- MANEJADORES DE FILAS ---
+            const addRow = (path, newItem) => {
+                const parts = path.split('.');
+                setStore(prev => {
+                    let current = { ...prev };
+                    if (parts.length === 1) current[parts[0]] = [...current[parts[0]], { ...newItem, id: Date.now() }];
+                    else current[parts[0]][parts[1]] = [...current[parts[0]][parts[1]], { ...newItem, id: Date.now() }];
+                    return current;
+                });
+            };
 
-            const Doc01Matriz = () => (
+            // --- VISTAS DE DOCUMENTOS ---
+
+            const Doc01 = () => (
                 <div className="paper-sheet font-serif-doc text-[10pt]">
-                    <div className="text-center mb-6">
-                        <h1 className="font-bold text-lg uppercase underline">MATRIZ DE ESTÁNDARES Y DESEMPEÑOS PRECISADOS - 2026</h1>
-                    </div>
+                    <div className="text-center mb-8"><h1 className="font-bold text-lg uppercase underline">MATRIZ DE ESTÁNDARES Y DESEMPEÑOS PRECISADOS - 2026</h1></div>
                     <table>
-                        <thead className="bg-doc-header text-[8pt]">
+                        <thead className="bg-gray-doc text-[8.5pt]">
                             <tr>
-                                <td className="w-[20%]">ESTÁNDAR</td>
+                                <td className="w-[18%]">ESTÁNDAR</td>
                                 <td className="w-[15%]">COMPETENCIA</td>
                                 <td className="w-[15%]">CAPACIDADES</td>
                                 <td className="w-[15%]">DESEMPEÑO DCN</td>
-                                <td className="w-[15%] bg-yellow-50">DESEMPEÑOS PRECISADOS</td>
+                                <td className="w-[17%] bg-yellow-50">DESEMPEÑOS PRECISADOS</td>
                                 <td className="w-[20%] bg-blue-50">CRITERIOS</td>
                             </tr>
                         </thead>
                         <tbody>
-                            {store.matriz.map((row) => (
+                            {store.matriz.map(row => (
                                 <tr key={row.id}>
                                     <td><textarea rows="6" placeholder="Estándar..." /></td>
-                                    <td className="font-bold"><textarea rows="6" placeholder="Competencia..." /></td>
-                                    <td><textarea rows="6" placeholder="Capacidades..." /></td>
+                                    <td className="font-bold"><textarea rows="6" placeholder="Comp..." /></td>
+                                    <td><textarea rows="6" placeholder="Cap..." /></td>
                                     <td><textarea rows="6" placeholder="DCN..." /></td>
-                                    <td className="bg-yellow-50/20"><textarea rows="6" placeholder="PRECISIÓN..." /></td>
-                                    <td className="bg-blue-50/20"><textarea rows="6" placeholder="CRITERIOS..." /></td>
+                                    <td className="bg-yellow-50/20"><textarea rows="6" className="font-bold" placeholder="PRECISAR..." /></td>
+                                    <td className="bg-blue-50/20"><textarea rows="6" className="font-bold" placeholder="CRITERIOS..." /></td>
                                 </tr>
                             ))}
                         </tbody>
                     </table>
+                    <button onClick={() => addRow('matriz', {estandar:"", comp:"", cap:"", dcn:"", prec:"", crit:""})} className="mt-4 no-print text-blue-600 font-bold text-xs flex items-center gap-1"><Plus size={14}/> Añadir Fila a Matriz</button>
                 </div>
             );
 
-            const Doc02Anual = () => (
+            const Doc02 = () => (
                 <div className="paper-sheet font-serif-doc text-[10pt]">
-                    <div className="text-center mb-6">
-                        <h1 className="font-bold text-lg uppercase underline">PLANIFICACIÓN ANUAL - 2026</h1>
-                    </div>
-                    <div className="space-y-4">
-                        <section>
-                            <h2 className="font-bold">I. DATOS INFORMATIVOS:</h2>
-                            <div className="grid grid-cols-2 gap-2 text-[9pt] uppercase mt-2">
-                                <p>ÁREA: <input className="border-b border-black w-40" value={store.config.area}/></p>
-                                <p>DOCENTE: <input className="border-b border-black w-40" value={store.config.docente}/></p>
-                            </div>
-                        </section>
-                        <section>
-                            <h2 className="font-bold">II. FUNDAMENTACIÓN:</h2>
-                            <textarea rows="5" className="border border-black p-2 mt-1" />
-                        </section>
-                        <section>
-                            <h2 className="font-bold uppercase">V. PROPÓSITO DE APRENDIZAJE:</h2>
-                            <table className="text-[7pt] text-center">
-                                <thead className="bg-slate-50 font-bold">
-                                    <tr>
-                                        <td rowSpan="3">COMPETENCIAS</td>
-                                        <td rowSpan="3" className="w-1/4">DESEMPEÑOS DCN</td>
-                                        <td colSpan="9">ORGANIZACIÓN DEL TIEMPO</td>
+                    <div className="text-center mb-10"><h1 className="font-bold text-xl uppercase underline">PLANIFICACIÓN ANUAL - 2026</h1></div>
+                    
+                    <section className="mb-6 uppercase font-bold text-[9.5pt]">
+                        <h2 className="mb-2">I. DATOS INFORMATIVOS:</h2>
+                        <div className="grid grid-cols-2 gap-y-1">
+                            <p>ÁREA Y/O PROYECTO: <span className="font-normal border-b border-black inline-block min-w-[150px]">{store.global.area}</span></p>
+                            <p>ENFOQUE DE ÁREA: <span className="font-normal border-b border-black inline-block min-w-[150px]">COMUNICATIVO</span></p>
+                            <p>DOCENTE: <span className="font-normal border-b border-black inline-block min-w-[200px]">{store.global.docente}</span></p>
+                            <p>GRADO Y SEC.: <span className="font-normal border-b border-black inline-block min-w-[100px]">{store.global.grado} {store.global.seccion}</span></p>
+                            <p>FECHA: <span className="font-normal border-b border-black inline-block min-w-[100px]">{store.global.fecha}</span></p>
+                        </div>
+                    </section>
+
+                    <section className="mb-6"><h2 className="font-bold uppercase">II. FUNDAMENTACIÓN</h2><textarea rows="5" className="border border-black p-2 mt-1" placeholder="Escribir fundamento anual..." /></section>
+
+                    <section className="mb-6">
+                        <h2 className="font-bold uppercase">III. ENFOQUES TRANSVERSALES</h2>
+                        <table className="text-[9pt] mt-1 text-center">
+                            <thead className="bg-gray-50 font-bold uppercase">
+                                <tr><td>ENFOQUES TRANSVERSALES</td><td>VALORES</td><td>ACTITUDES</td></tr>
+                            </thead>
+                            <tbody>
+                                {store.anual.enfoques.map(enf => (
+                                    <tr key={enf.id}>
+                                        <td className="p-1"><input className="font-bold" value={enf.nom} /></td>
+                                        <td className="p-1"><input /></td>
+                                        <td className="p-1"><textarea rows="2" /></td>
                                     </tr>
-                                    <tr><td colSpan="3">I T</td><td colSpan="3">II T</td><td colSpan="3">III T</td></tr>
-                                    <tr>{[1,2,3,4,5,6,7,8,9].map(n=><td key={n}>{n}</td>)}</tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td className="p-4"></td><td className="p-4"></td>
-                                        {[...Array(9)].map((_,i)=><td key={i} className="border border-black"></td>)}
+                                ))}
+                            </tbody>
+                        </table>
+                        <button onClick={() => addRow('anual.enfoques', {nom:"", val:"", act:""})} className="mt-1 no-print text-[8pt] text-blue-600 font-bold">+ Añadir Enfoque</button>
+                    </section>
+
+                    <section className="mb-6">
+                        <h2 className="font-bold uppercase">IV. CALENDARIZACIÓN</h2>
+                        <table className="text-[8.5pt] text-center mt-1">
+                            <thead className="bg-gray-100 font-bold">
+                                <tr><td rowSpan="2">TRIMESTRES</td><td colSpan="2">TEMPORALIZACIÓN</td><td rowSpan="2">N° SEM</td><td rowSpan="2">N° HORAS</td></tr>
+                                <tr><td>UNIDAD</td><td>NOMBRE DE LA UNIDAD</td></tr>
+                            </thead>
+                            <tbody>
+                                {store.anual.calendarizacion.map(u => (
+                                    <tr key={u.id}>
+                                        <td className="font-bold">{u.trim}</td>
+                                        <td>{u.u}</td>
+                                        <td className="text-left"><input /></td>
+                                        <td><input className="text-center"/></td>
+                                        <td><input className="text-center"/></td>
                                     </tr>
-                                </tbody>
-                            </table>
-                        </section>
-                    </div>
+                                ))}
+                            </tbody>
+                        </table>
+                    </section>
                 </div>
             );
 
-            const Doc05Proyecto = () => (
+            const Doc05 = () => (
                 <div className="paper-sheet font-serif-doc text-[10pt]">
-                    <div className="mb-4 font-bold text-sm">
-                        <p>PROYECTO N°: {store.proyecto.n}</p>
-                        <p>NOMBRE: <input className="border-b border-black font-normal italic w-2/3" placeholder="Nombre del proyecto..."/></p>
+                    <div className="mb-10 font-bold uppercase text-sm">
+                        <p>PROYECTO N°: <input className="w-12 border-b border-black font-normal" /></p>
+                        <p>NOMBRE DEL PROYECTO: <input className="w-2/3 border-b border-black font-normal italic" placeholder="Título..." /></p>
                     </div>
-                    <h2 className="font-bold uppercase mb-2">II. SITUACIÓN SIGNIFICATIVA:</h2>
-                    <table className="text-center font-bold text-[10pt]">
-                        <thead className="bg-slate-100 uppercase">
-                            <tr><td>UBICACIÓN</td><td>PROBLEMÁTICA</td><td>DESAFÍO</td></tr>
-                        </thead>
-                        <tbody>
-                            <tr className="h-40">
-                                <td><textarea className="text-center italic" placeholder="..." /></td>
-                                <td><textarea className="text-center italic" placeholder="..." /></td>
-                                <td><textarea className="text-center italic" placeholder="..." /></td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    <section className="mb-6 uppercase font-bold text-[9pt]">
+                        <h2 className="mb-3">I. DATOS INFORMATIVOS</h2>
+                        <p>NIVEL: {store.global.nivel}</p>
+                        <p>GRADO: {store.global.grado}</p>
+                        <p>ÁREAS: {store.global.area}</p>
+                        <p>DOCENTE: {store.global.docente}</p>
+                    </section>
+                    <section className="mb-8">
+                        <h2 className="font-bold uppercase mb-2">II. SITUACIÓN SIGNIFICATIVA:</h2>
+                        <table className="text-center font-bold text-[10.5pt] bg-slate-50">
+                            <thead><tr><th className="p-2">UBICACIÓN</th><th className="p-2">PROBLEMÁTICA</th><th className="p-2">DESAFÍO</th></tr></thead>
+                            <tbody>
+                                <tr className="h-40">
+                                    <td><textarea className="text-center italic h-full" /></td>
+                                    <td><textarea className="text-center italic h-full" /></td>
+                                    <td><textarea className="text-center italic h-full" /></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </section>
+                    <section>
+                        <h2 className="font-bold uppercase mb-2">IV. PROPÓSITO DE APRENDIZAJE</h2>
+                        <table className="text-[8.5pt] text-center">
+                            <thead className="bg-gray-50 uppercase font-bold">
+                                <tr><td>COMPETENCIAS</td><td>CAPACIDADES</td><td>DESEMPEÑOS PRECISADOS</td><td>EVIDENCIAS</td><td>INST. EVALUACIÓN</td></tr>
+                            </thead>
+                            <tbody>
+                                <tr className="h-12"><td></td><td></td><td></td><td></td><td></td></tr>
+                                <tr className="bg-gray-200 font-bold"><td colSpan="2">PRODUCTO FINAL</td><td colSpan="3"><input className="text-center font-bold uppercase" /></td></tr>
+                            </tbody>
+                        </table>
+                    </section>
                 </div>
+            );
+
+            const Sidebar = () => (
+                <aside className="w-64 bg-slate-900 text-slate-400 p-6 no-print hidden lg:flex flex-col border-r border-slate-800">
+                    <div className="flex items-center gap-3 text-white mb-10">
+                        <div className="bg-blue-600 p-2 rounded-xl"><PenTool size={20} /></div>
+                        <span className="font-black text-xl tracking-tighter">ARQUITECTO PRO</span>
+                    </div>
+                    <nav className="flex-1 space-y-1">
+                        {[
+                            { id: 'doc01', label: '01. Matriz', icon: Layout },
+                            { id: 'doc02', label: '02. Anual', icon: Calendar },
+                            { id: 'doc03', label: '03. Unidad', icon: ClipboardCheck },
+                            { id: 'doc04', label: '04. Sesión', icon: FileText },
+                            { id: 'doc05', label: '05. Proyecto', icon: BookOpen },
+                        ].map(t => (
+                            <button
+                                key={t.id}
+                                onClick={() => setActiveTab(t.id)}
+                                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all ${activeTab === t.id ? 'bg-blue-600 text-white shadow-lg' : 'hover:bg-slate-800'}`}
+                            >
+                                <t.icon size={18} /> {t.label}
+                            </button>
+                        ))}
+                    </nav>
+                    <div className="pt-6 border-t border-slate-800">
+                        <button 
+                            onClick={() => handleSave(activeTab.toUpperCase(), {})}
+                            className="w-full bg-slate-800 text-white py-3 rounded-xl text-xs font-black flex items-center justify-center gap-2 hover:bg-black transition-all"
+                        >
+                            {isSaving ? <RefreshCw className="animate-spin" size={14}/> : <Save size={14}/>} 
+                            {isSaving ? "GUARDANDO..." : "GUARDAR EN SHEETS"}
+                        </button>
+                    </div>
+                </aside>
             );
 
             return (
-                <div className="min-h-screen flex flex-col">
-                    {/* Header - No se imprime */}
-                    <nav className="bg-slate-900 text-white p-4 sticky top-0 z-50 no-print flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                            <div className="bg-blue-600 p-2 rounded-lg font-black text-xl">A</div>
-                            <h1 className="font-bold text-lg">ARQUITECTO PRO</h1>
-                        </div>
-                        
-                        <div className="flex gap-1 bg-slate-800 p-1 rounded-xl">
-                            {['doc01', 'doc02', 'doc03', 'doc04', 'doc05'].map(tab => (
-                                <button
-                                    key={tab}
-                                    onClick={() => setActiveTab(tab)}
-                                    className={`px-4 py-2 rounded-lg text-[10px] font-bold uppercase transition-all ${
-                                        activeTab === tab ? 'bg-blue-600 text-white shadow-md' : 'text-slate-400 hover:text-white'
-                                    }`}
-                                >
-                                    {tab.replace('doc', 'Doc ')}
-                                </button>
-                            ))}
-                        </div>
-
-                        <div className="flex gap-4">
-                            <button 
-                                onClick={() => handleSave(activeTab.toUpperCase())}
-                                className="bg-slate-700 px-4 py-2 rounded-lg text-xs font-bold hover:bg-slate-600 flex items-center gap-2"
-                            >
-                                {isSaving ? "Guardando..." : "Guardar en Sheets"}
-                            </button>
-                            <button onClick={() => window.print()} className="bg-emerald-600 px-4 py-2 rounded-lg text-xs font-bold hover:bg-emerald-500">
-                                Imprimir
-                            </button>
-                        </div>
-                    </nav>
-
-                    {/* Área de Trabajo */}
-                    <main className="flex-1 overflow-y-auto print-area">
-                        {activeTab === 'doc01' && <Doc01Matriz />}
-                        {activeTab === 'doc02' && <Doc02Anual />}
-                        {activeTab === 'doc05' && <Doc05Proyecto />}
-                        {(activeTab === 'doc03' || activeTab === 'doc04') && (
-                            <div className="text-center py-40 text-slate-400 font-bold uppercase">
-                                Hoja {activeTab.toUpperCase()} en construcción visual...
+                <div className="min-h-screen flex">
+                    <Sidebar />
+                    <main className="flex-1 overflow-y-auto print-area flex flex-col items-center">
+                        <header className="w-full bg-white border-b px-8 py-4 flex justify-between items-center no-print">
+                            <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">Visualización en Tiempo Real / {activeTab}</div>
+                            <div className="flex items-center gap-4">
+                                {lastSaved && <span className="text-[9px] font-bold text-green-600 uppercase tracking-tighter">Sincronizado: {lastSaved}</span>}
+                                <button onClick={() => window.print()} className="p-2 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-600"><Printer size={20}/></button>
                             </div>
-                        )}
+                        </header>
+                        <div className="w-full">
+                            {activeTab === 'doc01' && <Doc01 />}
+                            {activeTab === 'doc02' && <Doc02 />}
+                            {activeTab === 'doc05' && <Doc05 />}
+                            {(activeTab === 'doc03' || activeTab === 'doc04') && (
+                                <div className="text-center py-40 text-slate-300 font-black uppercase text-3xl italic">Hoja Virtual en Proceso de Diseño...</div>
+                            )}
+                        </div>
                     </main>
                 </div>
             );
